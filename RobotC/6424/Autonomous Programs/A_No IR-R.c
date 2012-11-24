@@ -1,6 +1,5 @@
 #pragma config(Hubs,  S1, HTServo,  HTMotor,  HTMotor,  none)
-#pragma config(Sensor, S1,     ,               sensorI2CMuxController)
-#pragma config(Sensor, S2,     infrared,       sensorHiTechnicIRSeeker1200)
+#pragma config(Sensor, S2,     infrared,       sensorI2CCustom)
 #pragma config(Sensor, S3,     weight,         sensorHiTechnicTouchMux)
 #pragma config(Sensor, S4,     touch,          sensorTouch)
 #pragma config(Motor,  motorA,          motor_popcorn, tmotorNXT, openLoop, reversed)
@@ -31,32 +30,28 @@
 
 void initializeRobot()
 {
-	// Place code here to init servos to starting positions.
 	// Sensors are config'ed and setup by RobotC (need to stabalize).
-	// Also add any settings that need to be set (other than global
-	// variables), such as max PID speed, servo update rate, etc.
 
-	Servo_SetSpeed(servo_IR, 10);	// maximum speed!
-	Servo_SetSpeed(servo_claw, 10);	// maximum speed!
-	Servo_SetSpeed(servo_ramp, 10);	// maximum speed!
+	Servo_SetSpeed(servo_IR, 10);		// maximum speed!
+	Servo_SetSpeed(servo_claw, 10);		// maximum speed!
+	Servo_SetSpeed(servo_ramp, 100);	// slowly update so ramp doesn't release.
 
-	Servo_Rotate(servo_IR, g_IRServoExtended);		// fold back up after start of tele-op
-	Servo_Rotate(servo_claw, g_clawServoExtended);	// keep it straight out after tele-op
-	Servo_Rotate(servo_ramp, g_rampServoDefault);	// stop ramp from deploying
+	Servo_Rotate(servo_IR, g_IRServoExtended);		// will fold back up in tele-op
+	Servo_Rotate(servo_claw, g_clawServoExtended);	// will be folded in tele-op
+	Servo_Rotate(servo_ramp, g_rampServoDefault);	// stops ramp from deploying
 
-
-	Motor_SetMaxSpeed(g_FullDrivePower);
+	Motor_SetMaxSpeed(g_FullRegulatedPower);
 
 	Motor_ResetEncoder(motor_L);
 	Motor_ResetEncoder(motor_R);
 	Motor_ResetEncoder(motor_lift);
 
-	nMotorEncoder[motor_lift] = 0;
-
-
-	//HTIRS2setDSPMode(infrared, g_IRsensorMode);
-
-
+	// Wait this long so the claw & IR servos get to update.
+	// The ramp-release servo shouldn't move; the long update time
+	// is to prevent sudden jerks that might release the ramp.
+	// We don't need to wait for the IR sensor to stabalize since
+	// the robot doesn't read from it until it's at the first column,
+	// which should be ample time for RobotC to setup the sensor.
 	Time_Wait(10);
 
 	return;
@@ -66,21 +61,11 @@ void initializeRobot()
 
 task main()
 {
-
-
-	//// These will be used later and are declared here to save from having to
-	//// declare them every single loop.
-	//int IRdirA = 0;
-	//int IRdirB = 0;
-	//int IRdirC = 0;
-	//int IRdirD = 0;
-	//int IRdirE = 0;
-
-
-
 	waitForStart();
 
 	initializeRobot();
+
+
 
 	// The amount of time the robot...
 
@@ -90,52 +75,51 @@ task main()
 	const int turnTimeB		= 40;
 	// ...drives up to the peg before lifting the lift up.
 	const int forwardTimeC	= 155;
-	// ...lifts the claw to put a ring on.
+	// ...lifts the claw to put a ring on (row 2).
 	const int liftTimeF		= 79;
-	// ...moves forward, putting the ring onto the peg
+	// ...moves forward, putting the ring onto the peg.
 	const int forwardTimeG	= 65;
 	// ...lowers its lift to get rid of the ring.
-	const int liftTimeH		= 53;
+	const int liftTimeH		= 55;
 	// ...backs up and gets ready to go to a dispenser.
-	const int backwardTimeI	= 200;
+	const int backwardTimeI	= 300;
+
+	// ...turns to face parallel to the walls.
+	const int turnTimeJ		= 40;
+	// ...moves forward to align itself with a dispenser.
+	const int forwardTimeK	= 100;
+	// ...turns to face the dispenser.
+	const int turnTimeL		= 80;
+	// ...moves forward to be under the dispenser.
+	const int forwardTimeM	= 50;
+
 
 	Move_Forward	(forwardTimeA, g_AccurateMotorPower);
 	Turn_Right		(turnTimeB, g_AccurateMotorPower, g_AccurateMotorPower);
 	Move_Forward	(forwardTimeC, g_AccurateMotorPower);
 	Lift_Lift		(liftTimeF, g_AccurateMotorPower);
 	Move_Forward	(forwardTimeG, g_AccurateMotorPower);
-	Lift_Lift		(liftTimeH, (-1) * g_AccurateMotorPower);
+
+	// Lift power is negative so that the lift goes DOWN, not UP.
+	Lift_Lift		(liftTimeH, (-1)*g_AccurateMotorPower);
 	Move_Backward	(backwardTimeI, g_AccurateMotorPower);
 
-	//Turn_Left(g_TurnTimeA, 100, 100);
-	//Move_Forward(g_ForwardTimeA, 100);
-	//Time_Wait(50);
+	// Turn power doesn't need to be negative (turns in-place).
+	Turn_Right		(turnTimeJ, g_AccurateMotorPower, g_AccurateMotorPower);
+	Move_Forward	(forwardTimeK, g_AccurateMotorPower);
+	Turn_Right		(turnTimeL, g_AccurateMotorPower, g_AccurateMotorPower);
+	Move_Forward	(forwardTimeM, g_AccurateMotorPower);
 
-	////HTIRS2readAllDCStrength(infrared, IRdirA, IRdirB, IRdirC, IRdirD, IRdirE);
 
-	//if ( (IRdirA+IRdirB+IRdirC+IRdirD+IRdirE) > g_IRthreshold )
-	//{
-	//	Turn_Left(g_TurnTimeB, g_AccurateMotorPower, g_AccurateMotorPower);
-	//	Move_Forward(g_ForwardTimeB, g_AccurateMotorPower);
-	//	Lift_Lift(g_LiftTimeB, g_AccurateMotorPower);
-	//}
-	//else
-	//{
-	//	Move_Forward(g_ForwardTimeC, g_AccurateMotorPower);
-	//	Time_Wait(50);
-	//	//HTIRS2readAllACStrength(infrared, IRdirA, IRdirB, IRdirC, IRdirD, IRdirE);
-	//	if ( (IRdirA+IRdirB+IRdirC+IRdirD+IRdirE) > g_IRthreshold )
-	//	{
-	//		Turn_Left(g_TurnTimeD, g_AccurateMotorPower, g_AccurateMotorPower);
-	//		Move_Forward(g_ForwardTimeD, g_AccurateMotorPower);
-	//		Lift_Lift(g_LiftTimeD, g_AccurateMotorPower);
-	//	}
-	//	else
-	//	{
-	//		Move_Forward(g_ForwardTimeE, g_AccurateMotorPower);
-	//		Turn_Left(g_TurnTimeF, g_AccurateMotorPower, g_AccurateMotorPower);
-	//		Move_Forward(g_ForwardTimeF, g_AccurateMotorPower);
-	//		Lift_Lift(g_LiftTimeF, g_AccurateMotorPower);
-	//	}
-	//}
+	while (true)
+	{
+		PlaySoundFile("moo.rso");
+		while(bSoundActive == true)
+		{
+			Time_Wait(1);
+		}
+	}
+
+
+
 }
