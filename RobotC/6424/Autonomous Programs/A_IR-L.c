@@ -32,6 +32,10 @@ void initializeRobot()
 {
 	// Sensors are config'ed and setup by RobotC (need to stabalize).
 
+	// The IR sensor needs this command (it seems like RobotC doesn't
+	// initialize third-party sensors automatically.
+	HTIRS2setDSPMode(infrared, g_IRsensorMode);
+
 	Servo_SetSpeed(servo_IR, 10);		// maximum speed!
 	Servo_SetSpeed(servo_claw, 10);		// maximum speed!
 	Servo_SetSpeed(servo_ramp, 100);	// slowly update so ramp doesn't release.
@@ -61,7 +65,77 @@ void initializeRobot()
 
 task main()
 {
+	// The IR signal strengh in all 5 directions.
+	int IRdirA = 0;
+	int IRdirB = 0;
+	int IRdirC = 0;
+	int IRdirD = 0;
+	int IRdirE = 0;
+
+
+
 	waitForStart();
 
 	initializeRobot();
+
+
+
+	// The amount of time the robot...
+	const int turnTimeA 	= 40;
+	const int forwardTimeA 	= 50;
+	const int turnTimeB 	= 80;
+	const int forwardTimeB 	= 30;
+	const int liftTimeB 	= 60;
+	const int forwardTimeC 	= 50;
+	const int turnTimeD 	= 80;
+	const int forwardTimeD 	= 30;
+	const int liftTimeD 	= 60;
+	const int forwardTimeE 	= 50;
+	const int turnTimeF 	= 80;
+	const int forwardTimeF 	= 30;
+	const int liftTimeF 	= 60;
+
+
+	Turn_Right(turnTimeA, 100, 100);
+	Move_Forward(forwardTimeA, 100);
+	Time_Wait(50);
+
+	HTIRS2readAllDCStrength(infrared, IRdirA, IRdirB, IRdirC, IRdirD, IRdirE);
+
+	if ( (IRdirA+IRdirB+IRdirC+IRdirD+IRdirE) > g_IRthreshold )
+	{
+		Turn_Right		(turnTimeB, g_AccurateMotorPower, g_AccurateMotorPower);
+		Move_Forward	(forwardTimeB, g_AccurateMotorPower);
+		Lift_Lift		(liftTimeB, g_AccurateMotorPower);
+	}
+	else
+	{
+		Move_Forward(ForwardTimeC, g_AccurateMotorPower);
+		Time_Wait(50);
+		HTIRS2readAllACStrength(infrared, IRdirA, IRdirB, IRdirC, IRdirD, IRdirE);
+		if ( (IRdirA+IRdirB+IRdirC+IRdirD+IRdirE) > g_IRthreshold )
+		{
+			Turn_Right		(turnTimeD, g_AccurateMotorPower, g_AccurateMotorPower);
+			Move_Forward	(forwardTimeD, g_AccurateMotorPower);
+			Lift_Lift		(liftTimeD, g_AccurateMotorPower);
+		}
+		else
+		{
+			Move_Forward	(forwardTimeE, g_AccurateMotorPower);
+			Turn_Right		(turnTimeF, g_AccurateMotorPower, g_AccurateMotorPower);
+			Move_Forward	(forwardTimeF, g_AccurateMotorPower);
+			Lift_Lift		(liftTimeF, g_AccurateMotorPower);
+		}
+	}
+
+
+
+	while (true)
+	{
+		PlaySoundFile("moo.rso");
+		while(bSoundActive == true)
+		{
+			Time_Wait(1);
+		}
+	}
 }
