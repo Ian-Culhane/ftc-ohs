@@ -10,6 +10,9 @@ const tHTIRS2DSPMode g_IRsensorMode = DSP_1200;
 const int g_IRthreshold = 10;
 
 
+// Time to drive forward to put a ring on.
+const int g_PutRingOnTime = 10;
+
 // The various positions of the various servos.
 const int g_IRServoLowered		= 0;
 const int g_IRServoExtended		= 220;
@@ -23,6 +26,10 @@ const int g_rampServoDeployed	= 0;	// TODO!
 // The threshold for joystick values to count (eliminates humming).
 // The highest we've ever recorded is +-7.
 const int g_JoystickThreshold = 10;
+
+
+int powerLift = 0;
+LiftState isLiftState = LIFT_JOYSTICK;
 
 
 // The factor to divide by when fine-tuning motors.
@@ -44,7 +51,7 @@ const int g_AccurateMotorPower = 65;
 
 // Threshold for encoder target thingy.
 const int g_LiftAccuracyRough = 50;
-const int g_LiftAccuracyFine = 5;
+const int g_LiftAccuracyFine = 10;
 
 
 // These angles are added onto the current encoder count of the
