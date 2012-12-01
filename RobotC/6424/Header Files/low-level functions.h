@@ -25,16 +25,12 @@ void Motor_Stop(tMotor motorName, bool brake=true)
 
 // This function does NOT reset the encoder, in case that is being
 // used elsewhere. Reset the encoder periodically to prevent overflow.
-void Motor_ExactRotation(	tMotor motorName,	int angle,
-							int power=75,		bool brake=true)
+void Motor_Target(tMotor motorName, int angle)
 {
 	// Using some variables directly since this code is low-level.
 	int originalAngle = 0;
 	originalAngle = nMotorEncoder[motorName];
 	nMotorEncoderTarget[motorName] = angle + originalAngle;
-	motor[motorName] = power;
-	//motor[motorName] = 0;	//uncomment if nMotorEncoderTarget[] doesn't work
-	bFloatDuringInactiveMotorPWM = !(brake);
 }
 
 void Motor_SetPower(tMotor motorName, int power)
@@ -148,7 +144,7 @@ int Joystick_Joystick(	JoystickJoystick Joystick,	//best line of code ever
 							axisValue = joystick.joy1_x1;
 							break;
 						case AXIS_Y:	//controller 1, joystick L, Y-axis
-							axisValue = joystick.joy1_y1;
+							axisValue = (-1)*joystick.joy1_y1;
 							break;
 					}
 					break;
@@ -159,7 +155,7 @@ int Joystick_Joystick(	JoystickJoystick Joystick,	//best line of code ever
 							axisValue = joystick.joy1_x2;
 							break;
 						case AXIS_Y:	//controller 1, joystick L, Y-axis
-							axisValue = joystick.joy1_y2;
+							axisValue = (-1)*joystick.joy1_y2;
 							break;
 					}
 					break;
@@ -176,7 +172,7 @@ int Joystick_Joystick(	JoystickJoystick Joystick,	//best line of code ever
 							axisValue = joystick.joy2_x1;
 							break;
 						case AXIS_Y:	//controller 2, joystick L, Y-axis
-							axisValue = joystick.joy2_y1;
+							axisValue = (-1)*joystick.joy2_y1;
 							break;
 					}
 					break;
@@ -187,7 +183,7 @@ int Joystick_Joystick(	JoystickJoystick Joystick,	//best line of code ever
 							axisValue = joystick.joy2_x2;
 							break;
 						case AXIS_Y:	//controller 2, joystick L, Y-axis
-							axisValue = joystick.joy2_y2;
+							axisValue = (-1)*joystick.joy2_y2;
 							break;
 					}
 					break;
@@ -233,19 +229,9 @@ JoystickDirection Joystick_Direction(JoystickController controller =
 /////////////////////////////
 
 // breaks down time to wait into 10ms and 1ms chunks
-void Time_Wait(int ms)
+void Time_Wait(int time)
 {
-	int waitTime10ms = (ms - (ms%320)) / 320;
-	int waitTime1ms = (ms - (ms%32)) / 32;
-
-	for (int i=0; i<waitTime10ms; i++)
-	{
-		wait10Msec(320);
-	}
-	for (int i=0; i<waitTime1ms; i++)
-	{
-		wait1Msec(32);
-	}
+	wait10Msec(time);
 }
 
 
@@ -285,12 +271,12 @@ void Semaphore_Unlock(TSemaphore semaphore)
 
 bool Semaphore_IsCurrentlyOwned(TSemaphore semaphore)
 {
-	bDoesTaskOwnSemaphore(semaphore);
+	return (bool)bDoesTaskOwnSemaphore(semaphore);
 }
 
 ubyte Semaphore_GetOwner(TSemaphore semaphore)
 {
-	getSemaphoreTaskOwner(semaphore);
+	return getSemaphoreTaskOwner(semaphore);
 }
 
 
@@ -341,12 +327,12 @@ int Math_ToLogarithmic(int input)
 	if (input >= 0)
 	{
 		convertedInput = input;
-		//convertedInput = input * 100 / 127;
+		//convertedInput = pow( 1.05, (input*100/127) );
 	}
 	else if (input < 0)
 	{
 		convertedInput = input;
-		//convertedInput = input * 100 / 127;
+		//convertedInput = (-1)*pow( 1.05, (abs(input)*100/127) );
 	}
 	return convertedInput;
 }
