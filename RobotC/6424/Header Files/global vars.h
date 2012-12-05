@@ -7,7 +7,7 @@
 const tHTIRS2DSPMode g_IRsensorMode = DSP_1200;
 
 // The threshold for IR values to count as detected.
-const int g_IRthreshold = 10;
+const int g_IRthreshold = 5;
 
 
 // Time to drive forward to put a ring on.
@@ -16,11 +16,11 @@ const int g_PutRingOnTime = 10;
 // The various positions of the various servos.
 const int g_IRServoLowered		= 0;
 const int g_IRServoExtended		= 220;
-const int g_clawServoDefault	= 100;
+const int g_clawServoDefault	= 0;
 const int g_clawServoExtended	= 250;
-const int g_clawServoFolded		= 230;	// (just a guess)
-const int g_rampServoDefault	= 0;	// TODO!
-const int g_rampServoDeployed	= 0;	// TODO!
+const int g_clawServoFolded		= 0;	// (just a guess)
+const int g_rampServoDefault	= 40;	// TODO!
+const int g_rampServoDeployed	= 15;	// TODO!
 
 
 // The threshold for joystick values to count (eliminates humming).
@@ -59,6 +59,7 @@ const int g_LiftAccuracyFine = 10;
 const int g_TopLiftAngle = 6 *1000;		//TODO
 const int g_MiddleLiftAngle = 5 *1000;	//TODO
 const int g_BottomLiftAngle = 3 *1000;	//TODO
+const int g_FetchLiftAngle = 2 *1000;	//TODO
 
 
 // (CONTROLLER_1):
